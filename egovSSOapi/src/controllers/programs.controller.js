@@ -252,6 +252,7 @@ async function chatProgramDiscovery(req, res, next) {
         programs: services.slice(0, 8).map(s => ({
           name: s.title,
           agency: s.agency,
+          description: s.summary || '',
           url: s.official_url,
         })),
       },

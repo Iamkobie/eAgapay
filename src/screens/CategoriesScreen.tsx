@@ -1,20 +1,53 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, Send, Info, Plus, Loader2, ArrowLeft } from 'lucide-react'
+import { Search, Send, Info, Plus, Loader2, ArrowLeft, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react'
 import { CATEGORIES } from '../data'
 import { ProgramSubmitModal } from '../components/ProgramSubmitModal'
 import { useAuth } from '../context/AuthContext'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
+interface ProgramCard {
+  name: string
+  agency: string
+  url: string
+  description?: string
+}
+
 interface Message {
   from: 'user' | 'ai'
   text: string
+  programs?: ProgramCard[]
 }
 
 interface CategoriesScreenProps {
   onSelect: (cat: string, query?: string) => void
 }
 
+// ─── Program Card (inline in chat) ────────────────────────────────────────────
+function MiniProgramCard({ program }: { program: ProgramCard }) {
+  const [expanded, setExpanded] = useState(false)
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden hover:border-[#0342EE]/40 transition-all shadow-sm">
+      <div className="p-4">
+        <div className="text-xs text-slate-400 font-medium mb-1">{program.agency}</div>
+        <h4 className="text-sm font-bold text-slate-900 leading-snug">{program.name}</h4>
+        {program.description && (
+          <p className="text-xs text-slate-500 mt-1.5 leading-relaxed line-clamp-2">{program.description}</p>
+        )}
+        <div className="flex items-center gap-2 mt-3">
+          {program.url && (
+            <a href={program.url} target="_blank" rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#0342EE] px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors">
+              <ExternalLink size={12} /> Apply
+            </a>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -42,6 +75,7 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
       occupation: ai.occupation?.occupation,
       education: ai.educational_attainment?.map(e => `${e.level} in ${e.educational_background}`).join('; '),
       salary_range: ai.expected_salary?.expected_salary,
+      civil_status: ai.other_personal_information?.marital_status,
     }
   }
 
@@ -49,10 +83,8 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
     const query = searchQuery.trim()
     if (!query || loading) return
 
-    // Enter chat mode
     if (!chatMode) setChatMode(true)
 
-    // Add user message
     setMessages(prev => [...prev, { from: 'user', text: query }])
     setSearchQuery('')
     setLoading(true)
@@ -69,7 +101,17 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
       })
       if (!res.ok) throw new Error('Failed')
       const json = await res.json()
-      setMessages(prev => [...prev, { from: 'ai', text: json.data?.reply || 'Sorry, I could not process that. Please try again.' }])
+      const reply = json.data?.reply || 'Sorry, I could not process that.'
+      const programs = json.data?.programs || []
+
+      // Only include programs if they have URLs (meaning AI found real matches)
+      const validPrograms = programs.filter((p: ProgramCard) => p.url)
+
+      setMessages(prev => [...prev, {
+        from: 'ai',
+        text: reply,
+        programs: validPrograms.length > 0 ? validPrograms : undefined,
+      }])
     } catch {
       setMessages(prev => [...prev, { from: 'ai', text: "I'm having trouble connecting. Please try again or browse programs by category below." }])
     } finally {
@@ -106,16 +148,27 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
 
           {/* Conversation messages */}
           {chatMode && messages.length > 0 && (
-            <div className="mb-4 max-h-[50vh] overflow-y-auto space-y-3 pr-2">
+            <div className="mb-4 max-h-[60vh] overflow-y-auto space-y-4 pr-2">
               {messages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] text-sm px-4 py-3 rounded-2xl leading-relaxed whitespace-pre-wrap ${
-                    msg.from === 'user'
-                      ? 'bg-[#0342EE] text-white rounded-br-md'
-                      : 'bg-slate-100 text-slate-800 rounded-bl-md border border-slate-200'
-                  }`}>
-                    {msg.text}
+                <div key={i}>
+                  <div className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[85%] text-sm px-4 py-3 rounded-2xl leading-relaxed whitespace-pre-wrap ${
+                      msg.from === 'user'
+                        ? 'bg-[#0342EE] text-white rounded-br-md'
+                        : 'bg-slate-100 text-slate-800 rounded-bl-md border border-slate-200'
+                    }`}>
+                      {msg.text}
+                    </div>
                   </div>
+
+                  {/* Program cards — rendered as UI below AI message */}
+                  {msg.programs && msg.programs.length > 0 && (
+                    <div className="mt-3 ml-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {msg.programs.map((prog, j) => (
+                        <MiniProgramCard key={j} program={prog} />
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
               {loading && (
