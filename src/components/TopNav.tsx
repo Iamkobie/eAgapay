@@ -9,13 +9,14 @@ import {
   User as UserIcon,
 } from 'lucide-react'
 import type { Page } from '../types'
-import { USER } from '../data'
+import { useAuth } from '../context/AuthContext'
 import { PhSunIcon } from './PhSunIcon'
 
 export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate: (p: Page) => void; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
+  const { displayName, initials } = useAuth()
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -62,10 +63,10 @@ export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate:
                 className="flex items-center gap-3 hover:bg-slate-50 p-1.5 pr-3 rounded-full transition-all border border-transparent hover:border-slate-200"
               >
                 <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold bg-[#0342EE] text-white shadow-inner">
-                  {USER.initials}
+                  {initials}
                 </div>
                 <div className="text-left hidden md:block">
-                  <div className="text-sm font-semibold text-slate-800 leading-tight">{USER.name}</div>
+                  <div className="text-sm font-semibold text-slate-800 leading-tight">{displayName}</div>
                   <div className="text-[10px] text-green-600 font-medium flex items-center gap-0.5">
                     <CheckCircle2 size={10} /> Verified
                   </div>
@@ -76,7 +77,7 @@ export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate:
               {profileOpen && (
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden py-2 animate-in fade-in slide-in-from-top-2">
                   <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                    <p className="text-sm font-semibold text-slate-800">{USER.name}</p>
+                    <p className="text-sm font-semibold text-slate-800">{displayName}</p>
                     <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
                       <ShieldCheck size={12} className="text-green-600" />
                       PhilSys Verified Account
@@ -103,10 +104,10 @@ export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate:
         <div className="sm:hidden px-4 py-4 bg-white border-t border-slate-200 shadow-inner space-y-2">
           <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 mb-4">
             <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold bg-[#0342EE] text-white">
-              {USER.initials}
+              {initials}
             </div>
             <div>
-              <div className="text-slate-800 text-sm font-semibold">{USER.name}</div>
+              <div className="text-slate-800 text-sm font-semibold">{displayName}</div>
               <div className="text-green-600 text-xs font-medium flex items-center gap-1">
                 <CheckCircle2 size={12} /> PhilSys Verified
               </div>

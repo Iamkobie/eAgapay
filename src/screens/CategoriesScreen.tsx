@@ -3,11 +3,18 @@ import { Search, Send, Info } from 'lucide-react'
 import { CATEGORIES } from '../data'
 
 interface CategoriesScreenProps {
-  onSelect: (cat: string) => void
+  onSelect: (cat: string, query?: string) => void
 }
 
 export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('')
+
+  function handleSearch() {
+    if (searchQuery.trim()) {
+      // Natural language query — pass as 'general' category with the query text
+      onSelect('general', searchQuery.trim())
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -29,9 +36,10 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
               placeholder="Ask what you're looking for... (e.g. 'housing loan' or 'scholarship')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
             <div className="absolute inset-y-0 right-2 flex items-center">
-              <button className="p-2 bg-[#0342EE] text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
+              <button onClick={handleSearch} className="p-2 bg-[#0342EE] text-white rounded-xl hover:bg-blue-700 transition-colors shadow-sm">
                 <Send size={18} className="ml-0.5" />
               </button>
             </div>
