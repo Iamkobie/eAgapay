@@ -2,8 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, MessageCircle, X, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
-const EGOV_AI_URL = import.meta.env.VITE_EGOV_AI_URL ?? ''
-const EGOV_AI_ACCESS_CODE = import.meta.env.VITE_EGOV_AI_ACCESS_CODE ?? ''
+const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
 
 interface Message {
   from: 'user' | 'bot'
@@ -61,16 +60,14 @@ export function ChatWidget() {
     setLoading(true)
 
     try {
-      const response = await fetch(`${EGOV_AI_URL}/api/chat`, {
+      const response = await fetch(`${API_URL}/api/programs/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${EGOV_AI_ACCESS_CODE}`,
         },
         body: JSON.stringify({
           message: userMsg.text,
           user_context: buildUserContext(),
-          // Pass conversation history for multi-turn context
           history: messages.slice(-6).map(m => ({
             role: m.from === 'user' ? 'user' : 'assistant',
             content: m.text,
@@ -79,11 +76,11 @@ export function ChatWidget() {
       })
 
       if (!response.ok) {
-        throw new Error(`AI service responded with ${response.status}`)
+        throw new Error(`Service responded with ${response.status}`)
       }
 
       const data = await response.json()
-      const botText = data.reply ?? data.message ?? data.content ?? 'Sorry, I could not get a response.'
+      const botText = data.data?.reply ?? 'Sorry, I could not get a response.'
 
       setMessages(prev => [...prev, { from: 'bot', text: botText }])
     } catch (err) {
