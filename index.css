@@ -1,0 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-gov-blue: #1a4fa0;
+  --color-gov-blue-dark: #0f3272;
+  --color-gov-blue-light: #e8f0fb;
+  --color-ph-red: #ce1126;
+  --color-ph-gold: #d4a017;
+  --color-success: #16a34a;
+  --font-sans: 'Inter', system-ui, sans-serif;
+}
+
+html, body {
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+::-webkit-scrollbar { display: none; }
+* { scrollbar-width: none; }
