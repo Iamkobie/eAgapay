@@ -48,7 +48,7 @@ export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate:
                <PhSunIcon size={24} color="#fff" />
             </div>
             <div className="text-left flex flex-col justify-center">
-              <span className="text-slate-900 font-bold text-sm sm:text-base leading-tight">eGovPH</span>
+              <span className="text-slate-900 font-bold text-sm sm:text-base leading-tight">eAgapay</span>
               <span className="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider leading-tight">Opportunity Discovery</span>
             </div>
           </button>

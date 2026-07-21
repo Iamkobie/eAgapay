@@ -12,14 +12,14 @@ import {
 } from 'lucide-react'
 
 export const USER = {
-  name: 'Maria Santos',
-  initials: 'MS',
-  province: 'Quezon City, NCR',
-  dateOfBirth: 'March 15, 1997',
+  name: 'Josie Dela Cruz',
+  initials: 'JD',
+  province: 'Pangasinan, Region I',
+  dateOfBirth: 'January 1, 1990',
   sex: 'Female',
   civilStatus: 'Single',
   citizenship: 'Filipino',
-  philsysId: 'XXXX-XXXX-XXXX-1234',
+  philsysId: 'XXX001',
 }
 
 export const CATEGORIES = [
