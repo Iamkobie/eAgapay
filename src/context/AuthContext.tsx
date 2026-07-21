@@ -88,9 +88,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Loads the eGov profile from public.user_metadata for the given user_id.
-   * Falls back to sessionStorage cache if RLS blocks the query.
+   * Tries Supabase direct first, then backend API, then sessionStorage cache.
    */
   async function loadProfile(userId: string) {
+    // Try 1: Direct Supabase query (works if RLS allows)
     const { data, error } = await supabase
       .from('user_metadata')
       .select('value')
@@ -100,53 +101,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!error && data?.value) {
       setProfile(data.value as EgovProfile)
       sessionStorage.removeItem('egov_profile_cache')
-    } else {
-      // Fallback: use cached profile from login response
-      const cached = sessionStorage.getItem('egov_profile_cache')
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached)
-          // The cached data uses camelCase keys from the controller's formatUser()
-          // Map it back to the snake_case EgovProfile format
-          const mapped: EgovProfile = {
-            uniqid: parsed.uniqid,
-            first_name: parsed.firstName,
-            middle_name: parsed.middleName,
-            last_name: parsed.lastName,
-            suffix: parsed.suffix,
-            birth_date: parsed.birthDate,
-            gender: parsed.gender,
-            nationality: parsed.nationality,
-            mobile: parsed.mobile,
-            photo: parsed.photo,
-            address: parsed.address,
-            street: parsed.street,
-            barangay: parsed.barangay,
-            municipality: parsed.municipality,
-            region: parsed.region,
-            province: parsed.province,
-            country: parsed.country,
-            country_alpha_2_code: parsed.countryAlpha2Code,
-            country_alpha_3_code: parsed.countryAlpha3Code,
-            postal: parsed.postal,
-            address_line_2: parsed.addressLine2,
-            barangay_code: parsed.barangayCode,
-            province_code: parsed.provinceCode,
-            municipality_code: parsed.municipalityCode,
-            region_code: parsed.regionCode,
-            country_id: parsed.countryId,
-            foreign_address: parsed.foreignAddress,
-            signature_url: parsed.signatureUrl,
-            passport: parsed.passport,
-            national_id: parsed.nationalId,
-            tin_id: parsed.tinId,
-            additional_information: parsed.additionalInformation,
-            last_login_at: parsed.lastLoginAt,
-          }
-          setProfile(mapped)
-        } catch {
-          // Invalid cache — ignore
+      return
+    }
+
+    // Try 2: Backend API (bypasses RLS with service role)
+    const apiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:3000'
+    try {
+      const res = await fetch(`${apiUrl}/api/auth/profile?user_id=${userId}`)
+      if (res.ok) {
+        const json = await res.json()
+        if (json.data) {
+          setProfile(json.data as EgovProfile)
+          sessionStorage.removeItem('egov_profile_cache')
+          return
         }
+      }
+    } catch {
+      // Backend unavailable, continue to cache
+    }
+
+    // Try 3: SessionStorage cache from login response
+    const cached = sessionStorage.getItem('egov_profile_cache')
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached)
+        const mapped: EgovProfile = {
+          uniqid: parsed.uniqid,
+          first_name: parsed.firstName,
+          middle_name: parsed.middleName,
+          last_name: parsed.lastName,
+          suffix: parsed.suffix,
+          birth_date: parsed.birthDate,
+          gender: parsed.gender,
+          nationality: parsed.nationality,
+          mobile: parsed.mobile,
+          photo: parsed.photo,
+          address: parsed.address,
+          street: parsed.street,
+          barangay: parsed.barangay,
+          municipality: parsed.municipality,
+          region: parsed.region,
+          province: parsed.province,
+          country: parsed.country,
+          country_alpha_2_code: parsed.countryAlpha2Code,
+          country_alpha_3_code: parsed.countryAlpha3Code,
+          postal: parsed.postal,
+          address_line_2: parsed.addressLine2,
+          barangay_code: parsed.barangayCode,
+          province_code: parsed.provinceCode,
+          municipality_code: parsed.municipalityCode,
+          region_code: parsed.regionCode,
+          country_id: parsed.countryId,
+          foreign_address: parsed.foreignAddress,
+          signature_url: parsed.signatureUrl,
+          passport: parsed.passport,
+          national_id: parsed.nationalId,
+          tin_id: parsed.tinId,
+          additional_information: parsed.additionalInformation,
+          last_login_at: parsed.lastLoginAt,
+        }
+        setProfile(mapped)
+      } catch {
+        // Invalid cache
       }
     }
   }
