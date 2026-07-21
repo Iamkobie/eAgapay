@@ -35,7 +35,7 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
             <input
               type="text"
               className="block w-full pl-12 pr-16 py-4 border-2 border-slate-200 rounded-2xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-0 focus:border-[#0342EE] transition-all shadow-sm text-base"
-              placeholder="Ask what you're looking for... (e.g. 'housing loan' or 'scholarship')"
+              placeholder="Describe your situation to the AI assistant... (e.g. 'I'm a student and I need financial help')"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}

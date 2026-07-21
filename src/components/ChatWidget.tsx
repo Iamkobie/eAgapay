@@ -9,15 +9,27 @@ interface Message {
   text: string
 }
 
-export function ChatWidget() {
+export function ChatWidget({ triggerMessage, onTriggered }: { triggerMessage?: string; onTriggered?: () => void }) {
   const [open, setOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([
-    { from: 'bot', text: "Hi! I'm your eGovPH assistant. Describe your situation — like \"I'm a student struggling financially\" — and I'll find the government programs you qualify for and guide you through the process." },
+    { from: 'bot', text: "Hi! I'm your eGovPH AI assistant. Tell me about your situation — like \"I'm a student struggling financially\" or \"I need help with housing\" — and I'll find government programs you may qualify for and guide you step by step." },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const { profile, user } = useAuth()
+
+  // Handle external trigger (from search bar)
+  useEffect(() => {
+    if (triggerMessage && triggerMessage.trim()) {
+      setOpen(true)
+      // Small delay to let the chat open first
+      setTimeout(() => {
+        sendMessage(triggerMessage.trim())
+        onTriggered?.()
+      }, 300)
+    }
+  }, [triggerMessage])
 
   useEffect(() => {
     if (open) endRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -51,10 +63,10 @@ export function ChatWidget() {
     }
   }
 
-  async function handleSend() {
-    if (!input.trim() || loading) return
+  async function sendMessage(text: string) {
+    if (!text.trim() || loading) return
 
-    const userMsg: Message = { from: 'user', text: input.trim() }
+    const userMsg: Message = { from: 'user', text: text.trim() }
     setMessages(prev => [...prev, userMsg])
     setInput('')
     setLoading(true)
@@ -84,7 +96,6 @@ export function ChatWidget() {
 
       setMessages(prev => [...prev, { from: 'bot', text: botText }])
     } catch (err) {
-      // Graceful fallback — don't break the chat on network errors
       setMessages(prev => [...prev, {
         from: 'bot',
         text: "I'm having trouble connecting right now. Please try again in a moment, or visit the official agency websites for program information.",
@@ -92,6 +103,10 @@ export function ChatWidget() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleSend() {
+    sendMessage(input)
   }
 
   return (
