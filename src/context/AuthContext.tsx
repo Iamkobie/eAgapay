@@ -87,8 +87,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   /**
-   * Loads the eGov profile from etulong.user_metadata for the given user_id.
-   * Falls back to empty object if not found.
+   * Loads the eGov profile from public.user_metadata for the given user_id.
+   * Falls back to sessionStorage cache if RLS blocks the query.
    */
   async function loadProfile(userId: string) {
     const { data, error } = await supabase
@@ -99,6 +99,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!error && data?.value) {
       setProfile(data.value as EgovProfile)
+      sessionStorage.removeItem('egov_profile_cache')
+    } else {
+      // Fallback: use cached profile from login response
+      const cached = sessionStorage.getItem('egov_profile_cache')
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          // The cached data uses camelCase keys from the controller's formatUser()
+          // Map it back to the snake_case EgovProfile format
+          const mapped: EgovProfile = {
+            uniqid: parsed.uniqid,
+            first_name: parsed.firstName,
+            middle_name: parsed.middleName,
+            last_name: parsed.lastName,
+            suffix: parsed.suffix,
+            birth_date: parsed.birthDate,
+            gender: parsed.gender,
+            nationality: parsed.nationality,
+            mobile: parsed.mobile,
+            photo: parsed.photo,
+            address: parsed.address,
+            street: parsed.street,
+            barangay: parsed.barangay,
+            municipality: parsed.municipality,
+            region: parsed.region,
+            province: parsed.province,
+            country: parsed.country,
+            country_alpha_2_code: parsed.countryAlpha2Code,
+            country_alpha_3_code: parsed.countryAlpha3Code,
+            postal: parsed.postal,
+            address_line_2: parsed.addressLine2,
+            barangay_code: parsed.barangayCode,
+            province_code: parsed.provinceCode,
+            municipality_code: parsed.municipalityCode,
+            region_code: parsed.regionCode,
+            country_id: parsed.countryId,
+            foreign_address: parsed.foreignAddress,
+            signature_url: parsed.signatureUrl,
+            passport: parsed.passport,
+            national_id: parsed.nationalId,
+            tin_id: parsed.tinId,
+            additional_information: parsed.additionalInformation,
+            last_login_at: parsed.lastLoginAt,
+          }
+          setProfile(mapped)
+        } catch {
+          // Invalid cache — ignore
+        }
+      }
     }
   }
 

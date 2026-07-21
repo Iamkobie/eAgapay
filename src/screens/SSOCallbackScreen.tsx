@@ -43,7 +43,7 @@ export function SSOCallbackScreen() {
       }
 
       // Session is set — navigate to the app
-      navigate('/categories', { replace: true })
+      navigate('/app', { replace: true })
     }
 
     handleCallback()
