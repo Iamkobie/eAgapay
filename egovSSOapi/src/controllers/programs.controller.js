@@ -205,8 +205,34 @@ async function chatProgramDiscovery(req, res, next) {
 
     let aiReply;
     try {
-      // Use just the user message directly (shorter prompts avoid WAF blocks)
-      const simplePrompt = `A Filipino citizen (${knownFields.age ? knownFields.age + ' years old, ' : ''}${knownFields.province ? 'from ' + knownFields.province + ', ' : ''}${knownFields.education ? 'education: ' + knownFields.education : ''}) asks: "${message}". What Philippine government programs can help them? Be specific with program names, eligibility, and application steps.`;
+      // Build profile context string
+      const profileParts = [];
+      if (knownFields.age) profileParts.push(`Age: ${knownFields.age}`);
+      if (knownFields.gender) profileParts.push(`Gender: ${knownFields.gender}`);
+      if (knownFields.nationality) profileParts.push(`Nationality: ${knownFields.nationality}`);
+      if (knownFields.province) profileParts.push(`Location: ${knownFields.municipality || ''} ${knownFields.province || ''}`);
+      if (knownFields.occupation) profileParts.push(`Occupation: ${knownFields.occupation}`);
+      if (knownFields.education) profileParts.push(`Education: ${knownFields.education}`);
+      if (knownFields.civil_status) profileParts.push(`Civil status: ${knownFields.civil_status}`);
+      if (knownFields.salary_range) profileParts.push(`Income: ${knownFields.salary_range}`);
+
+      const conversationHistory = (history || []).slice(-4).map(h => `${h.role}: ${h.content}`).join('\n');
+
+      let simplePrompt = 'CONTEXT: This user is ALREADY authenticated via eGovPH SSO. They are a verified Filipino citizen. NEVER ask them to confirm their nationality, location, or anything already in their profile below.\n\n';
+      
+      if (profileParts.length > 0) {
+        simplePrompt += `VERIFIED PROFILE (do NOT re-ask these): ${profileParts.join(', ')}.\n\n`;
+      } else {
+        simplePrompt += 'VERIFIED: Filipino citizen (profile data unavailable but identity confirmed).\n\n';
+      }
+
+      if (conversationHistory) {
+        simplePrompt += `CONVERSATION SO FAR:\n${conversationHistory}\n\n`;
+      }
+
+      simplePrompt += `USER: "${message}"\n\n`;
+      simplePrompt += 'RULES: (1) Max 2-3 sentences. (2) If you need info NOT in their profile, ask ONE short question. (3) When you have enough info, recommend 1-3 specific programs with name, one-line benefit, and official URL. (4) Never ask about nationality or citizenship. (5) Be warm, direct, like a helpful caseworker.';
+
       aiReply = await askAI(simplePrompt, 'PH');
     } catch (aiError) {
       // Fallback to rule-based response if AI is unavailable
