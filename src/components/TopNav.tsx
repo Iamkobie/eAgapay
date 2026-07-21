@@ -10,7 +10,6 @@ import {
 } from 'lucide-react'
 import type { Page } from '../types'
 import { USER } from '../data'
-import { PhSunIcon } from './PhSunIcon'
 
 export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate: (p: Page) => void; onLogout: () => void }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -44,13 +43,7 @@ export function TopNav({ page, onNavigate, onLogout }: { page: Page; onNavigate:
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <button className="flex items-center gap-3 group" onClick={() => onNavigate('categories')}>
-            <div className="bg-[#0342EE] p-1.5 rounded-lg shadow-sm group-hover:bg-[#022f99] transition-colors">
-               <PhSunIcon size={24} color="#fff" />
-            </div>
-            <div className="text-left flex flex-col justify-center">
-              <span className="text-slate-900 font-bold text-sm sm:text-base leading-tight">eAgapay</span>
-              <span className="text-slate-500 text-[10px] sm:text-xs font-medium uppercase tracking-wider leading-tight">Opportunity Discovery</span>
-            </div>
+            <img src="/eAgapay.png" alt="eAgapay Logo" className="h-20 w-auto" />
           </button>
 
           <div className="hidden sm:flex items-center gap-8">

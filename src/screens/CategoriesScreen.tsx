@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Search, Send, Info } from 'lucide-react'
+import { Search, Send, Info, Plus } from 'lucide-react'
 import { CATEGORIES } from '../data'
+import { ProgramSubmitModal } from '../components/ProgramSubmitModal'
 
 interface CategoriesScreenProps {
   onSelect: (cat: string) => void
@@ -8,6 +9,7 @@ interface CategoriesScreenProps {
 
 export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-20">
@@ -89,7 +91,24 @@ export function CategoriesScreen({ onSelect }: CategoriesScreenProps) {
             <span className="font-semibold text-slate-800">Smart Matching:</span> Your verified PhilSys profile is applied automatically. You may be asked a few brief contextual questions to complete your eligibility check.
           </p>
         </div>
+
+        {/* Submit Program Button */}
+        <div className="mt-8 text-center">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="inline-flex items-center gap-2 bg-[#0342EE] text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
+          >
+            <Plus size={20} />
+            Submit a Government Program
+          </button>
+          <p className="text-sm text-slate-500 mt-3">
+            Know of a local government program? Help us build a centralized database.
+          </p>
+        </div>
       </div>
+
+      {/* Program Submit Modal */}
+      <ProgramSubmitModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   )
 }
