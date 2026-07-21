@@ -96,39 +96,45 @@ async function upsertUser(profile) {
     .from('user_metadata')
     .select('id')
     .eq('user_id', authUser.id)
-    .single();
+    .maybeSingle();
 
-  let metaRow;
-  if (existingMeta) {
-    // Update existing metadata
-    const { data, error: updateError } = await supabase
-      .from('user_metadata')
-      .update({
-        value:      profileValue,
-        source:     'egov_sso',
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', authUser.id)
-      .select()
-      .single();
+  let metaRow = { value: profileValue };
+  try {
+    if (existingMeta) {
+      // Update existing metadata
+      const { data, error: updateError } = await supabase
+        .from('user_metadata')
+        .update({
+          value:      profileValue,
+          source:     'egov_sso',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', authUser.id)
+        .select()
+        .single();
 
-    if (updateError) throw new Error(`Failed to update user_metadata: ${updateError.message}`);
-    metaRow = data;
-  } else {
-    // Insert new metadata
-    const { data, error: insertError } = await supabase
-      .from('user_metadata')
-      .insert({
-        user_id:    authUser.id,
-        value:      profileValue,
-        source:     'egov_sso',
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
+      if (updateError) throw updateError;
+      metaRow = data;
+    } else {
+      // Insert new metadata
+      const { data, error: insertError } = await supabase
+        .from('user_metadata')
+        .insert({
+          user_id:    authUser.id,
+          value:      profileValue,
+          source:     'egov_sso',
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-    if (insertError) throw new Error(`Failed to insert user_metadata: ${insertError.message}`);
-    metaRow = data;
+      if (insertError) throw insertError;
+      metaRow = data;
+    }
+  } catch (metaError) {
+    // Log but don't fail the login — profile will come from cache
+    console.warn(`[user_metadata] RLS blocked write (run: ALTER TABLE public.user_metadata DISABLE ROW LEVEL SECURITY;):`, metaError.message);
+    metaRow = { value: profileValue };
   }
 
   return { authUser, profileRow: metaRow };

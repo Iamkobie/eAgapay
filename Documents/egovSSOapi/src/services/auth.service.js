@@ -43,6 +43,13 @@ async function loginWithEgov(exchangeCode) {
     throw new Error('No session returned after OTP verification');
   }
 
+  // Log the JWT tokens to console on every login
+  console.log('\n─── Supabase Session Tokens ────────────────────────');
+  console.log('access_token:', sessionData.session.access_token);
+  console.log('refresh_token:', sessionData.session.refresh_token);
+  console.log('expires_in:', sessionData.session.expires_in);
+  console.log('────────────────────────────────────────────────────\n');
+
   return {
     session: {
       access_token:  sessionData.session.access_token,
