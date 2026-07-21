@@ -3,7 +3,6 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import type { Page } from './types'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { TopNav } from './components/TopNav'
-import { ChatWidget } from './components/ChatWidget'
 import { LoginScreen } from './screens/LoginScreen'
 import { CategoriesScreen } from './screens/CategoriesScreen'
 import { DashboardScreen } from './screens/DashboardScreen'
@@ -18,7 +17,6 @@ function AppInner() {
   const [page, setPage] = useState<Page>('categories')
   const [selectedCategory, setSelectedCategory] = useState<string>('employment')
   const [naturalQuery, setNaturalQuery] = useState<string>('')
-  const [chatTrigger, setChatTrigger] = useState<string>('')
 
   function navigatePage(p: Page) {
     setPage(p)
@@ -31,11 +29,6 @@ function AppInner() {
   }
 
   function handleCategorySelect(cat: string, query?: string) {
-    if (cat === 'general' && query) {
-      // Natural language query → open AI chat with this message
-      setChatTrigger(query)
-      return
-    }
     setSelectedCategory(cat)
     setNaturalQuery(query ?? '')
     navigatePage('form')
@@ -70,7 +63,6 @@ function AppInner() {
               {page === 'results' && <PlaceholderScreen title="Results" onBack={() => navigatePage('categories')} />}
               {page === 'detail' && <PlaceholderScreen title="Program Details" onBack={() => navigatePage('results')} />}
               {page === 'dashboard' && <DashboardScreen />}
-              <ChatWidget triggerMessage={chatTrigger} onTriggered={() => setChatTrigger('')} />
             </>
           )
         } />
